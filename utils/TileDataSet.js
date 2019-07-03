@@ -1,4 +1,4 @@
-import { imagePromise } from '../node_modules/@redfish/agentscript/src/utils/async.js'
+//import { imagePromise } from '../node_modules/@redfish/agentscript/src/utils/async.js'
 import RGBDataSet from '../node_modules/@redfish/agentscript/src/RGBDataSet.js'
 import DataSet from '../node_modules/@redfish/agentscript/src/DataSet.js'
 
@@ -17,6 +17,16 @@ export function pasteDataSet(dest, source, x = 0, y = 0) {
     return dest
 }
 
+async function imagePromise(src) {
+    let response = await fetch(src, { mode: 'cors' })
+    let blob = await response.blob()
+    let img = await createImageBitmap(blob)
+    img.src = src
+    img.naturalWidth = img.width
+    img.naturalHeight = img.height
+    return img
+}
+
 // A promisified TileDataSet
 export function TileDataSetPromise(options) {
     return new Promise((resolve, reject) => {
@@ -27,18 +37,18 @@ export function TileDataSetPromise(options) {
                 resolve(val)
             }
         }
-        new TileDataSet(options)
+        const tmp = new TileDataSet(options)
     })
 }
 
 //
 // Load tiled data into a dataset
 //
-class TileDataSet extends DataSet {
+export class TileDataSet extends DataSet {
     constructor(options = {}) {
         const width = 1280 || options.width
         const height = 800 || options.height
-        super(width, height, new Float32Array(width * height))
+        super(width, height, new Float64Array(width * height))
         // defaults values
         this.url = 'http://node.redfish.com/elevation/{z}/{x}/{y}.png'
         this.north = 35 // northern bound for the data
@@ -191,7 +201,7 @@ class TileDataSet extends DataSet {
         var ds = new DataSet(
             this.tileWidth,
             this.tileHeight,
-            new Float32Array(this.tileWidth * this.tileHeight)
+            new Float64Array(this.tileWidth * this.tileHeight)
         )
         ds.useNearest = this.useNearest
         return ds
@@ -204,7 +214,7 @@ class TileDataSet extends DataSet {
         // Stitch all tiles into a mosaic
         const wid = this.tileLocations.width * this.tileWidth
         const hei = this.tileLocations.height * this.tileHeight
-        const stitched = new DataSet(wid, hei, new Float32Array(wid * hei))
+        const stitched = new DataSet(wid, hei, new Float64Array(wid * hei))
         for (const im of tiles) {
             const md = this.tileLocations.tiles.find(a => {
                 return im.src === a.url

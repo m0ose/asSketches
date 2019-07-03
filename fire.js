@@ -5,6 +5,7 @@ import ColorMap from './node_modules/@redfish/agentscript/src/ColorMap.js'
 import TwoView from './node_modules/@redfish/agentscript/src/TwoView.js'
 import { TileDataSetPromise } from './utils/TileDataSet.js'
 import FireModel from './FireModel.js'
+import { requestDataSet } from './utils/TileDataSetWorkerInterface.js'
 
 const params = {
     seed: null,
@@ -25,13 +26,22 @@ params.world = World.defaultWorld(params.maxX, params.maxY)
 
 setTimeout(main)
 async function main() {
-    var elev = await TileDataSetPromise({
+    // var elev = await TileDataSetPromise({
+    //     north: 37,
+    //     south: 36.8,
+    //     west: -105,
+    //     east: -104.6,
+    //     url: 'http://node.redfish.com/elevation/{z}/{x}/{y}.png',
+    //     //zoom: 11,
+    //     width: 513,
+    //     height: 513,
+    // })
+    var elev = await requestDataSet({
         north: 37,
         south: 36.8,
         west: -105,
         east: -104.6,
         url: 'http://node.redfish.com/elevation/{z}/{x}/{y}.png',
-        //zoom: 11,
         width: 513,
         height: 513,
     })
