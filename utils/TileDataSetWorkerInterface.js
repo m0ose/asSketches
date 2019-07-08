@@ -29,7 +29,7 @@ worker.onmessage = function(ev) {
 var _id = 1
 var queue = []
 
-export function requestDataSet(args, timeout = 10000) {
+export function WorkerTileDataSet(args, timeout = 10000) {
     var prom = new Promise((resolve, reject) => {
         const id = getID()
         queue.push({ id, resolve, reject })
