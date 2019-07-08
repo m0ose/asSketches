@@ -8,15 +8,23 @@ onmessage = function(e) {
         var currId = e.data.id
         let tds = new TileDataSet(
             Object.assign(e.data, {
-                callback: (err, ev) => {
-                    this.console.log('worker loaded 2', err, ev)
-                    postMessage({
-                        cmd: 'response',
-                        id: e.data.id,
-                        width: ev.width,
-                        height: ev.height,
-                        data: ev.data,
-                    })
+                callback: (err, ev2) => {
+                    console.log('worker loaded 2', err, ev2)
+                    if (err) {
+                        postMessage({
+                            cmd: 'error',
+                            id: e.data.id,
+                            //error: err,
+                        })
+                    } else {
+                        postMessage({
+                            cmd: 'response',
+                            id: e.data.id,
+                            width: ev2.width,
+                            height: ev2.height,
+                            data: ev2.data,
+                        })
+                    }
                 },
             })
         )

@@ -30,12 +30,12 @@ async function main() {
         north: 37,
         south: 36.8,
         west: -105,
-        east: -104.6,
-        url: 'http://node.redfish.com/elevation/{z}/{x}/{y}.png',
+        east: -104.4,
+        url:
+            'https://s3-us-west-2.amazonaws.com/world-elevation-tiles/DEM_tiles/{z}/{x}/{y}.png',
         width: 513,
         height: 513,
     })
-    console.log('elev:', elev)
 
     const model = new FireModel(params.world)
     // model.population = params.population;

@@ -23,6 +23,12 @@ worker.onmessage = function(ev) {
                 'Worker couldnt find this element in queue. Maybe it timed out'
             )
         }
+    } else if (ev.data.cmd == 'error') {
+        const elem = pullFromQueue(ev.data.id)
+        if (elem) {
+            clearTimeout(elem.timerID)
+            elem.reject(ev.data)
+        }
     }
 }
 
