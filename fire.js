@@ -3,9 +3,18 @@ import util from './node_modules/@redfish/agentscript/src/util.js'
 import Color from './node_modules/@redfish/agentscript/src/Color.js'
 import ColorMap from './node_modules/@redfish/agentscript/src/ColorMap.js'
 import TwoView from './node_modules/@redfish/agentscript/src/TwoView.js'
-import { TileDataSetPromise } from './utils/TileDataSet.js'
 import FireModel from './FireModel.js'
-import { WorkerTileDataSet } from './utils/TileDataSetWorkerInterface.js'
+// import { WorkerTileDataSet } from './utils/TileDataSetWorkerInterface.js'
+import { TileDataSetPromise } from './node_modules/redfish-core/lib/ModelingCore/TileDataSet.js'
+import { DataSetWorkerified } from './node_modules/redfish-core/lib/ModelingCore/DataSetWorkerified.js'
+
+// hack
+new DataSetWorkerified(
+    1,
+    1,
+    undefined,
+    './node_modules/redfish-core/dist/DataSet.worker.esm.js'
+)
 
 const params = {
     seed: null,
@@ -26,7 +35,7 @@ params.world = World.defaultWorld(params.maxX, params.maxY)
 
 setTimeout(main)
 async function main() {
-    var elev = await WorkerTileDataSet({
+    var elev = await TileDataSetPromise({
         north: 37,
         south: 36.8,
         west: -105,

@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@redfish/agentscript": "ssh://git@github.com:backspaces/agentscript.git",
-    "asxtras": "ssh://git@github.com:m0ose/asxtras.git"
+    "asxtras": "ssh://git@github.com:m0ose/asxtras.git",
+    "redfish-core": "ssh://git@github.com:RedfishGroup/redfish-core.git"
   }
 }
