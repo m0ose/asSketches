@@ -3,9 +3,17 @@ import util from './node_modules/@redfish/agentscript/src/util.js'
 import Color from './node_modules/@redfish/agentscript/src/Color.js'
 import ColorMap from './node_modules/@redfish/agentscript/src/ColorMap.js'
 import TwoView from './node_modules/@redfish/agentscript/src/TwoView.js'
-import { TileDataSetPromise } from './utils/TileDataSet.js'
 import FireModel from './FireModel.js'
-import { requestDataSet } from './utils/TileDataSetWorkerInterface.js'
+import { TileDataSetPromise } from './node_modules/redfish-core/lib/ModelingCore/TileDataSet.js'
+import { DataSetWorkerified } from './node_modules/redfish-core/lib/ModelingCore/DataSetWorkerified.js'
+
+// hack
+new DataSetWorkerified(
+    1,
+    1,
+    undefined,
+    './node_modules/redfish-core/dist/DataSet.worker.esm.js'
+)
 
 const params = {
     seed: null,
@@ -26,51 +34,46 @@ params.world = World.defaultWorld(params.maxX, params.maxY)
 
 setTimeout(main)
 async function main() {
-    // var elev = await TileDataSetPromise({
-    //     north: 37,
-    //     south: 36.8,
-    //     west: -105,
-    //     east: -104.6,
-    //     url: 'http://node.redfish.com/elevation/{z}/{x}/{y}.png',
-    //     //zoom: 11,
-    //     width: 513,
-    //     height: 513,
-    // })
-    var elev = await requestDataSet({
+    var elev = await TileDataSetPromise({
         north: 37,
         south: 36.8,
         west: -105,
-        east: -104.6,
-        url: 'http://node.redfish.com/elevation/{z}/{x}/{y}.png',
+        east: -104.4,
+        url:
+            'https://s3-us-west-2.amazonaws.com/world-elevation-tiles/DEM_tiles/{z}/{x}/{y}.png',
         width: 513,
         height: 513,
     })
-    console.log('elev:', elev)
 
     const model = new FireModel(params.world)
     // model.population = params.population;
     model.setup()
 
-    const view = new TwoView('modelDiv', params.world, {
-        useSprites: true,
-        patchSize: params.patchSize,
-    })
-
-    util.toWindow({ model, view, params, Color, ColorMap, util })
+    util.toWindow({ model, params, Color, ColorMap, util })
 
     // Just create patches colors once:
     model.patches.ask(p => {
         let v = elev.getXY(p.x + 256, p.y + 256)
         p.elevation = v / 10
     })
+
+    draw(model)
+}
+
+function draw(model) {
+    const view = new TwoView('modelDiv', params.world, {
+        useSprites: true,
+        patchSize: params.patchSize,
+    })
+
     const perf = util.fps()
-    const minElev = elev.min()
-    const maxElev = elev.max()
+    const minElev = model.patches.map(p => p.elevation).min()
+    const maxElev = model.patches.map(p => p.elevation).max()
     console.log({ minElev, maxElev })
     const cmap = ColorMap.Jet
     view.createPatchPixels(i => {
         const p = model.patches[i]
-        const c = cmap.scaleColor(p.elevation, minElev / 10, maxElev / 10)
+        const c = cmap.scaleColor(p.elevation, minElev, maxElev)
         return c.getPixel()
     })
 
