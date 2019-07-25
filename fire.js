@@ -7,7 +7,7 @@ import FireModel from './FireModel.js'
 import { TileDataSetPromise } from './node_modules/redfish-core/lib/ModelingCore/TileDataSet.js'
 import { DataSetWorkerified } from './node_modules/redfish-core/lib/ModelingCore/DataSetWorkerified.js'
 
-// hack
+// monkey hack
 new DataSetWorkerified(
     1,
     1,
@@ -17,14 +17,9 @@ new DataSetWorkerified(
 
 const params = {
     seed: null,
-    // population: 100,
     maxX: 256,
     maxY: 256,
     steps: 500,
-    linkColor: 'white', // css
-    shape: 'dart',
-    shapeSize: 2,
-    patchSize: 1,
     world: null,
 }
 Object.assign(params, util.parseQueryString())
@@ -33,6 +28,7 @@ if (params.maxY == null) params.maxY = params.maxX
 params.world = World.defaultWorld(params.maxX, params.maxY)
 
 setTimeout(main)
+
 async function main() {
     console.time('download elevation')
     const bounds = {
@@ -40,8 +36,8 @@ async function main() {
         south: 36.4,
         west: -105,
         east: -104.4,
-        width: 513,
-        height: 513,
+        width: params.maxX * 2 + 1,
+        height: params.maxX * 2 + 1,
     }
     var elev = await TileDataSetPromise(
         Object.assign(
@@ -64,27 +60,18 @@ async function main() {
         )
     )
     console.timeEnd('download fuel')
-
+    //
     const model = new FireModel(params.world)
     // model.population = params.population;
     model.setup()
-
     util.toWindow({ model, params, Color, ColorMap, util })
-
     // Just create patches colors once:
     model.patches.ask(p => {
-        let pElv = elev.getXY(
-            p.x + Math.floor(elev.width / 2),
-            p.y + Math.floor(elev.height / 2)
-        )
+        let pElv = elev.getXY(p.x + params.maxX, p.y + params.maxY)
         p.elevation = pElv / 10
-        let pFuel = fuel.getXY(
-            p.x + Math.floor(elev.width / 2),
-            p.y + Math.floor(elev.height / 2)
-        )
+        let pFuel = fuel.getXY(p.x + params.maxX, p.y + params.maxY)
         p.fuel = pFuel
     })
-
     setupDraw(model)
 }
 
@@ -93,7 +80,6 @@ function setupDraw(model) {
         useSprites: true,
         patchSize: params.patchSize,
     })
-
     const minElev = model.patches.map(p => p.elevation).min()
     const maxElev = model.patches.map(p => p.elevation).max()
     console.log({ minElev, maxElev })
@@ -103,7 +89,6 @@ function setupDraw(model) {
         const c = cmap.scaleColor(p.elevation, minElev, maxElev)
         return c.getPixel()
     })
-
     const perf = util.fps()
     util.timeoutLoop(() => {
         tick(model, view, perf)
@@ -115,9 +100,7 @@ function setupDraw(model) {
 function tick(model, view, perf) {
     model.step()
     model.tick()
-
     view.clear()
     view.drawPatches()
-
     perf()
 }

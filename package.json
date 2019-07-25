@@ -2,6 +2,9 @@
   "dependencies": {
     "@redfish/agentscript": "ssh://git@github.com:backspaces/agentscript.git",
     "asxtras": "ssh://git@github.com:m0ose/asxtras.git",
-    "redfish-core": "ssh://git@github.com:RedfishGroup/redfish-core.git"
+    "flatqueue": "^1.1.0",
+    "redfish-core": "ssh://git@github.com:RedfishGroup/redfish-core.git",
+    "tinyqueue": "^2.0.3",
+    "utm": "^1.1.1"
   }
 }
