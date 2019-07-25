@@ -34,16 +34,36 @@ params.world = World.defaultWorld(params.maxX, params.maxY)
 
 setTimeout(main)
 async function main() {
-    var elev = await TileDataSetPromise({
+    console.time('download elevation')
+    const bounds = {
         north: 37,
-        south: 36.8,
+        south: 36.4,
         west: -105,
         east: -104.4,
-        url:
-            'https://s3-us-west-2.amazonaws.com/world-elevation-tiles/DEM_tiles/{z}/{x}/{y}.png',
         width: 513,
         height: 513,
-    })
+    }
+    var elev = await TileDataSetPromise(
+        Object.assign(
+            {
+                url:
+                    'https://s3-us-west-2.amazonaws.com/world-elevation-tiles/DEM_tiles/{z}/{x}/{y}.png',
+            },
+            bounds
+        )
+    )
+    console.timeEnd('download elevation')
+    console.time('download fuel')
+    var fuel = await TileDataSetPromise(
+        Object.assign(
+            {
+                url:
+                    'https://s3.amazonaws.com/simtable-fuel-tiles/and13/{z}/{x}/{y}.png',
+            },
+            bounds
+        )
+    )
+    console.timeEnd('download fuel')
 
     const model = new FireModel(params.world)
     // model.population = params.population;
@@ -53,20 +73,27 @@ async function main() {
 
     // Just create patches colors once:
     model.patches.ask(p => {
-        let v = elev.getXY(p.x + 256, p.y + 256)
-        p.elevation = v / 10
+        let pElv = elev.getXY(
+            p.x + Math.floor(elev.width / 2),
+            p.y + Math.floor(elev.height / 2)
+        )
+        p.elevation = pElv / 10
+        let pFuel = fuel.getXY(
+            p.x + Math.floor(elev.width / 2),
+            p.y + Math.floor(elev.height / 2)
+        )
+        p.fuel = pFuel
     })
 
-    draw(model)
+    setupDraw(model)
 }
 
-function draw(model) {
+function setupDraw(model) {
     const view = new TwoView('modelDiv', params.world, {
         useSprites: true,
         patchSize: params.patchSize,
     })
 
-    const perf = util.fps()
     const minElev = model.patches.map(p => p.elevation).min()
     const maxElev = model.patches.map(p => p.elevation).max()
     console.log({ minElev, maxElev })
@@ -77,18 +104,20 @@ function draw(model) {
         return c.getPixel()
     })
 
+    const perf = util.fps()
     util.timeoutLoop(() => {
-        model.step()
-        model.tick()
-
-        view.clear()
-        view.drawPatches()
-        // view.drawPatches(model.patches, p => {
-        //     const c = cmap.scaleColor(p.elevation, minElev / 10, maxElev / 10)
-        //     return c.getPixel()
-        // })
-        perf()
+        tick(model, view, perf)
     }, params.steps).then(() => {
         console.log(`Done, steps: ${perf.steps}, fps: ${perf.fps}`)
     })
+}
+
+function tick(model, view, perf) {
+    model.step()
+    model.tick()
+
+    view.clear()
+    view.drawPatches()
+
+    perf()
 }
