@@ -9,36 +9,32 @@ export default class FireModel extends Model {
     // ======================
     constructor(worldDptions, elevationDS, fuelDS) {
         super(worldDptions)
-        this.elevationDS = elevationDS
-        this.fuelDS = fuelDS
+        this.elevation = elevationDS
+        this.fuel = fuelDS
     }
 
     async setup() {
         console.log('setup called')
-        this.dzdx = await this.elevationDS.dataset.dzdx()
-        console.log('dzdx')
-        this.dzdy = await this.elevationDS.dataset.dzdy()
-        console.log('dzdy done')
+        console.time('dzdx dzdy')
+        this.dzdx = await this.elevation.dataset.dzdx()
+        this.dzdy = await this.elevation.dataset.dzdy()
+        console.timeEnd('dzdx dzdy')
         this.wind = [0, 0] // dx, dy
         //
         //  // Just create patches colors once:
-        this.patches.ask(p => {
-            // let pElv = this.elevationDS.getXY(
-            //     p.x + this.world.maxX,
-            //     p.y + this.world.maxY
-            // )
-            // p.elevation = pElv
-            let pFuel = this.fuelDS.dataset.getXY(
-                p.x + this.world.maxX,
-                p.y + this.world.maxY
-            )
-            p.fuel = pFuel
-        })
-        Object.defineProperty(this.patches.agentProto, 'elevation', {
+        this.patches.ask(p => {})
+        this.makeGetterForPatches('elevation')
+        this.makeGetterForPatches('fuel')
+        this.makeGetterForPatches('dzdx')
+        this.makeGetterForPatches('dzdy')
+    }
+
+    makeGetterForPatches(value) {
+        Object.defineProperty(this.patches.agentProto, value, {
             get: function() {
                 const x = this.x + this.model.world.maxX
                 const y = this.y + this.model.world.maxY
-                return this.model.elevationDS.dataset.getXY(x, y)
+                return this.model[value].dataset.getXY(x, y)
             },
         })
     }

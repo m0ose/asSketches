@@ -16,6 +16,11 @@ new DataSetWorkerified(
     './node_modules/redfish-core/dist/DataSet.worker.esm.js'
 )
 
+const FUEL_URL =
+    'https://s3.amazonaws.com/simtable-fuel-tiles/and13/{z}/{x}/{y}.png'
+const ELEV_URL =
+    'https://s3-us-west-2.amazonaws.com/world-elevation-tiles/DEM_tiles/{z}/{x}/{y}.png'
+
 const params = {
     seed: null,
     maxX: 256,
@@ -43,8 +48,7 @@ async function main() {
     var elev = await BoundedTileDataSetPromise(
         Object.assign(
             {
-                url:
-                    'https://s3-us-west-2.amazonaws.com/world-elevation-tiles/DEM_tiles/{z}/{x}/{y}.png',
+                url: ELEV_URL,
             },
             dataParams
         )
@@ -53,13 +57,7 @@ async function main() {
     console.timeEnd('download elevation')
     console.time('download fuel')
     var fuel = await BoundedTileDataSetPromise(
-        Object.assign(
-            {
-                url:
-                    'https://s3.amazonaws.com/simtable-fuel-tiles/and13/{z}/{x}/{y}.png',
-            },
-            params
-        )
+        Object.assign({ url: FUEL_URL }, params)
     )
     console.timeEnd('download fuel')
 
