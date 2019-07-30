@@ -4,8 +4,9 @@ import Color from './node_modules/@redfish/agentscript/src/Color.js'
 import ColorMap from './node_modules/@redfish/agentscript/src/ColorMap.js'
 import TwoView from './node_modules/@redfish/agentscript/src/TwoView.js'
 import FireModel from './FireModel.js'
-import { TileDataSetPromise } from './node_modules/redfish-core/lib/ModelingCore/TileDataSet.js'
 import { DataSetWorkerified } from './node_modules/redfish-core/lib/ModelingCore/DataSetWorkerified.js'
+import { Bounds } from './utils/Bounds.js'
+import { BoundedTileDataSetPromise } from './utils/BoundedDataSet.js'
 
 // monkey hack
 new DataSetWorkerified(
@@ -31,7 +32,7 @@ setTimeout(main)
 
 async function main() {
     console.time('download elevation')
-    const bounds = {
+    const dataParams = {
         north: 37,
         south: 36.4,
         west: -105,
@@ -39,39 +40,36 @@ async function main() {
         width: params.maxX * 2 + 1,
         height: params.maxX * 2 + 1,
     }
-    var elev = await TileDataSetPromise(
+    var elev = await BoundedTileDataSetPromise(
         Object.assign(
             {
                 url:
                     'https://s3-us-west-2.amazonaws.com/world-elevation-tiles/DEM_tiles/{z}/{x}/{y}.png',
             },
-            bounds
+            dataParams
         )
     )
+    elev.dataset = elev.dataset.multiply(1 / 10)
     console.timeEnd('download elevation')
     console.time('download fuel')
-    var fuel = await TileDataSetPromise(
+    var fuel = await BoundedTileDataSetPromise(
         Object.assign(
             {
                 url:
                     'https://s3.amazonaws.com/simtable-fuel-tiles/and13/{z}/{x}/{y}.png',
             },
-            bounds
+            params
         )
     )
     console.timeEnd('download fuel')
-    //
-    const model = new FireModel(params.world)
+
+    const model = new FireModel(params.world, elev, fuel)
     // model.population = params.population;
-    model.setup()
+    console.log('setup calling')
+    await model.setup()
+    console.log('setup done calling')
     util.toWindow({ model, params, Color, ColorMap, util })
-    // Just create patches colors once:
-    model.patches.ask(p => {
-        let pElv = elev.getXY(p.x + params.maxX, p.y + params.maxY)
-        p.elevation = pElv / 10
-        let pFuel = fuel.getXY(p.x + params.maxX, p.y + params.maxY)
-        p.fuel = pFuel
-    })
+
     setupDraw(model)
 }
 
@@ -91,16 +89,20 @@ function setupDraw(model) {
     })
     const perf = util.fps()
     util.timeoutLoop(() => {
-        tick(model, view, perf)
+        tick(model, perf)
+        draw(view)
     }, params.steps).then(() => {
         console.log(`Done, steps: ${perf.steps}, fps: ${perf.fps}`)
     })
 }
 
-function tick(model, view, perf) {
+function tick(model, perf) {
     model.step()
     model.tick()
+    perf()
+}
+
+function draw(view) {
     view.clear()
     view.drawPatches()
-    perf()
 }

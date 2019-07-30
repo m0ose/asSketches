@@ -1,6 +1,6 @@
 const METERS_PER_CHAIN = 20.1168
 
-export var andreson13SpreadFunctions = {
+export var anderson13SpreadFunctions = {
     getSpread: function(
         fuelindex,
         slopeDegrees,
