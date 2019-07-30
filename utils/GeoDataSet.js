@@ -1,9 +1,8 @@
-import { DataSetWorkerified } from '../node_modules/redfish-core/lib/ModelingCore/DataSetWorkerified.js'
 import { Bounds } from './Bounds.js'
 import { Point } from './Point.js'
-import { TileDataSetPromise } from '../node_modules/redfish-core/lib/ModelingCore/TileDataSet.js'
+import { TileDataSetPromise } from '../node_modules/redfish-core/lib/ModelingCore/TileDataSet'
 
-class BoundedDataSet {
+class GeoDataSet {
     constructor(dataset, bounds) {
         this.dataset = dataset
         this.bounds = bounds
@@ -36,5 +35,5 @@ export async function BoundedTileDataSetPromise(params) {
         [params.south, params.west],
         [params.north, params.east],
     ])
-    return new BoundedDataSet(v, bounds)
+    return new GeoDataSet(v, bounds)
 }

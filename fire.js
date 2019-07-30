@@ -5,8 +5,7 @@ import ColorMap from './node_modules/@redfish/agentscript/src/ColorMap.js'
 import TwoView from './node_modules/@redfish/agentscript/src/TwoView.js'
 import FireModel from './FireModel.js'
 import { DataSetWorkerified } from './node_modules/redfish-core/lib/ModelingCore/DataSetWorkerified.js'
-import { Bounds } from './utils/Bounds.js'
-import { BoundedTileDataSetPromise } from './utils/BoundedDataSet.js'
+import { BoundedTileDataSetPromise } from './utils/GeoDataSet.js'
 
 // monkey hack
 new DataSetWorkerified(
@@ -46,12 +45,7 @@ async function main() {
         height: params.maxX * 2 + 1,
     }
     var elev = await BoundedTileDataSetPromise(
-        Object.assign(
-            {
-                url: ELEV_URL,
-            },
-            dataParams
-        )
+        Object.assign({ url: ELEV_URL }, dataParams)
     )
     elev.dataset = elev.dataset.multiply(1 / 10)
     console.timeEnd('download elevation')
