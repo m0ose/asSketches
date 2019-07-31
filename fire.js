@@ -73,7 +73,7 @@ function setupDraw(model) {
         useSprites: true,
         patchSize: modelParams.patchSize,
     })
-    const drawnDS = 'elevation' // the name of the patch property to draw
+    const drawnDS = 'dzdy' // the name of the patch property to draw
     const minElev = model.patches.map(p => p[drawnDS]).min()
     const maxElev = model.patches.map(p => p[drawnDS]).max()
     console.log({ minElev, maxElev })
