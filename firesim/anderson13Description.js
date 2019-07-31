@@ -1,3 +1,40 @@
+import { DataSetWorkerified } from "../node_modules/redfish-core/lib/ModelingCore/DataSetWorkerified.js";
+
+export function makeFuelRGBLookupTable() {
+  var lookup = {}
+  for( var i in anderson13Description){
+      if( !isNaN(Number(i))){
+          var f = anderson13Description[i]
+          if(!lookup[f.r*256*256 + f.g*256 + f.b] ){
+              // allow a 2 pixel value variation, to account for slight differences from USGS
+              for( var ir=-2; ir<=2; ir++){
+                for( var ig=-2; ig<=2; ig++){
+                  for( var ib=-2; ib<=2; ib++){
+                    lookup[(f.r+ir)*256*256 + (f.g+ig)*256 + (f.b+ib)] = i
+                  }
+                }
+            }
+        }
+    }
+  }
+  return lookup
+}
+
+export function convertRGBFuelToOurFormat(dataSet) {
+  var lookup = makeFuelRGBLookupTable()
+  var resultDS = new DataSetWorkerified(dataSet.width, dataSet.height, new Float64Array(dataSet.width * dataSet.height))//dataSet.clone()
+  for (var i = 0; i < resultDS.data.length; i++) {
+      var dsval = Math.round(dataSet.data[i])
+      var pfuel = lookup[dsval]
+      if (pfuel) {
+          //p.fuel = Number(pfuel)
+          resultDS.data[i] = parseInt(pfuel)
+      }
+  }
+  return resultDS
+}
+
+
 export var anderson13Description = {
     "0": {
       "index": 0,
