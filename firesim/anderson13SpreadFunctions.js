@@ -1,3 +1,5 @@
+import { anderson13Description } from './anderson13Description.js'
+
 const METERS_PER_CHAIN = 20.1168
 
 export var anderson13SpreadFunctions = {
@@ -18,7 +20,7 @@ export var anderson13SpreadFunctions = {
         windSpeedMiles = Math.max(0, Math.min(200000, windSpeedMiles))
         var windIndex = Math.round(windSpeedMiles / 5) + 1
         windIndex = Math.max(1, Math.min(13, windIndex))
-        var fuelType = this[fuelindex]
+        var fuelType = this.getFuel(fuelindex)
         if (!fuelType) {
             //       console.error("Error: Fuel type not found," + fuelindex)
             return 0
@@ -34,7 +36,7 @@ export var anderson13SpreadFunctions = {
             return 0
         }
         var spreadRate = fuelType.matrix[slopeIndex][windIndex]
-        spreadRate = spreadRate * st.globals.metersPerChain //return in meters per hour
+        spreadRate = spreadRate * METERS_PER_CHAIN //return in meters per hour
         return spreadRate
     },
     getCustomSpread: function(fuel, windSpeedMiles, slopeDegrees) {
@@ -65,7 +67,7 @@ export var anderson13SpreadFunctions = {
             coef_slope[3] * sd * sd * sd
         var finalRate = spreadW + spreadSl
         finalRate = Math.max(1, finalRate)
-        finalRate = finalRate * st.globals.metersPerChain
+        finalRate = finalRate * METERS_PER_CHAIN
         return finalRate
     },
 
@@ -82,9 +84,9 @@ export var anderson13SpreadFunctions = {
         } else if (findex > 40 && findex < 99) {
             findex = Math.floor(findex / 10) * 10 //round down in this range
         }
-        var fuel = this[findex]
+        var fuel = anderson13Description[findex]
         if (!fuel) {
-            fuel = this[0]
+            fuel = anderson13Description[0]
         }
         return fuel
     },
@@ -98,7 +100,7 @@ export var anderson13SpreadFunctions = {
         if (!fuel.handCrewSpeed1) {
             fuel = this.getFuel(0)
         }
-        return fuel.handCrewSpeed1 * st.globals.metersPerChain
+        return fuel.handCrewSpeed1 * METERS_PER_CHAIN
     },
 
     getHandCrewSpeed2: function(fuelIndex) {
@@ -110,6 +112,6 @@ export var anderson13SpreadFunctions = {
         if (!fuel.handCrewSpeed2) {
             fuel = this.getFuel(0)
         }
-        return fuel.handCrewSpeed2 * st.globals.metersPerChain
+        return fuel.handCrewSpeed2 * METERS_PER_CHAIN
     },
 }

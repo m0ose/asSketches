@@ -23,9 +23,9 @@ const ELEV_URL =
 
 const modelParams = {
     seed: null,
-    maxX: 256,
-    maxY: 256,
-    steps: 50,
+    maxX: 128,
+    maxY: 128,
+    steps: 20,
     world: null,
 }
 Object.assign(modelParams, util.parseQueryString())
@@ -39,9 +39,9 @@ async function main() {
     console.time('download elevation')
     const dataParams = {
         north: 37,
-        south: 36.9,
+        south: 36.5,
         west: -105,
-        east: -104.9,
+        east: -104.5,
         width: 257,
         height: 257,
     }
@@ -55,6 +55,8 @@ async function main() {
         Object.assign({ url: FUEL_URL }, modelParams)
     )
     const fuel2 = convertRGBFuelToOurFormat(fuel.dataset)
+    fuel2.useNearest = true
+    fuel.dataset = fuel2
     console.log('fuel2', fuel2)
     console.timeEnd('download fuel')
 
@@ -73,14 +75,15 @@ function setupDraw(model) {
         useSprites: true,
         patchSize: modelParams.patchSize,
     })
-    const drawnDS = 'dzdy' // the name of the patch property to draw
+    const drawnDS = 'slopeX' // the name of the patch property to draw
     const minElev = model.patches.map(p => p[drawnDS]).min()
     const maxElev = model.patches.map(p => p[drawnDS]).max()
     console.log({ minElev, maxElev })
     const cmap = ColorMap.Jet
     view.createPatchPixels(i => {
         const p = model.patches[i]
-        const c = cmap.scaleColor(p[drawnDS], minElev, maxElev)
+        let val = p[drawnDS]
+        const c = cmap.scaleColor(val, minElev, maxElev)
         return c.getPixel()
     })
     const perf = util.fps()
