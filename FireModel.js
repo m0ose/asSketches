@@ -9,7 +9,7 @@ import { GeoDataSet } from './utils/GeoDataSet.js'
 import TinyQueue from './node_modules/tinyqueue/index.js'
 
 const RAD2DEG = 180 / Math.PI
-const dtSeconds = 60 //seconds
+const dtSeconds = 60000 //seconds
 const fireCrossWindK = 1.5
 export default class FireModel extends Model {
     // ======================
@@ -29,7 +29,7 @@ export default class FireModel extends Model {
             new DataSetWorkerified(this.world.width, this.world.height),
             this.elevation.bounds
         )
-        this.wind = [10, 10] // dx, dy
+        this.wind = [10, -10] // dx, dy
         // make values avaliable to patches.
         //   This is faster than setting a value for the patches, and more versitile.
         this.makeGetterForPatches('elevation')
@@ -66,13 +66,17 @@ export default class FireModel extends Model {
             this.queue.length > 0 &&
             this.queue.peek().timeToSpread < this.time
         ) {
-            count++
             let pRef = this.queue.pop()
             // Since its hard to remove from the queue when timeToSpreadchanges, we will push another version onto in the queue, and change the patches timetospread value. Then, we can ignore them if they dont match.
-            if (pRef.timeToSpread == pRef.patch.timeToSpread) {
+            if (
+                pRef.patch.ignitionTime <= 0 &&
+                pRef.timeToSpread == pRef.patch.timeToSpread
+            ) {
+                count++
                 let p = pRef.patch
                 p.ignitionTime = p.timeToSpread
                 p.neighbors4.forEach(nei => {
+                    // check if patch has burned
                     const dist = this.metersBetweenPatches(p, nei)
                     const dElev = nei.elevation - p.elevation
                     const slope = Math.atan2(dElev, dist) * RAD2DEG
@@ -91,20 +95,28 @@ export default class FireModel extends Model {
                     )
                     const fullWind = Math.hypot(windDx, windDy)
                     // if (wind > -10.0) {
-                    if (spreadRate > 5 && slope > -20) {
-                        let igniteTime =
+                    if (spreadRate > 5 && slope > -20 && nei.ignitionTime < 1) {
+                        let queuedIgniteTime =
                             p.ignitionTime + 60 * 60 * 1000 * spreadRate
-                        insertQueue.push({ nei, igniteTime })
+                        if (
+                            nei.ignitionTime <= 0 &&
+                            (nei.timeToSpread == undefined ||
+                                queuedIgniteTime < nei.timeToSpread)
+                        ) {
+                            insertQueue.push({ nei, queuedIgniteTime })
+                        }
                     }
                     // }
                 })
             }
         }
         insertQueue.forEach(v => {
-            this.ignitePatch(v.nei, v.igniteTime)
+            this.ignitePatch(v.nei, v.queuedIgniteTime)
         })
         console.log(
-            `${count} patches burned . ${insertQueue.length} newly ignited`
+            `${count} patches burned . ${
+                insertQueue.length
+            } newly ignited . Queue length: ${this.queue.length}`
         )
     }
 

@@ -23,9 +23,9 @@ const ELEV_URL =
 
 const modelParams = {
     seed: null,
-    maxX: 128,
-    maxY: 128,
-    steps: 20,
+    maxX: 256,
+    maxY: 256,
+    steps: 12000,
     world: null,
 }
 Object.assign(modelParams, util.parseQueryString())
@@ -38,10 +38,10 @@ setTimeout(main)
 async function main() {
     console.time('download elevation')
     const dataParams = {
-        north: 37,
-        south: 36.5,
-        west: -105,
-        east: -104.5,
+        north: 39,
+        south: 38.5,
+        west: -95,
+        east: -94.5,
         width: 257,
         height: 257,
     }
@@ -75,21 +75,11 @@ function setupDraw(model) {
         useSprites: true,
         patchSize: modelParams.patchSize,
     })
-    const drawnDS = 'slopeX' // the name of the patch property to draw
-    const minElev = model.patches.map(p => p[drawnDS]).min()
-    const maxElev = model.patches.map(p => p[drawnDS]).max()
-    console.log({ minElev, maxElev })
-    const cmap = ColorMap.Jet
-    view.createPatchPixels(i => {
-        const p = model.patches[i]
-        let val = p[drawnDS]
-        const c = cmap.scaleColor(val, minElev, maxElev)
-        return c.getPixel()
-    })
+
     const perf = util.fps()
     util.timeoutLoop(() => {
         tick(model, perf)
-        draw(view)
+        draw(view, model)
     }, modelParams.steps).then(() => {
         console.log(`Done, steps: ${perf.steps}, fps: ${perf.fps}`)
     })
@@ -101,9 +91,27 @@ function tick(model, perf) {
     perf()
 }
 
-function draw(view) {
+function draw(view, model) {
     view.clear()
     console.time('draw')
+    var drawnDS, minElev, maxElev
+    if (false) {
+        drawnDS = 'elevation' // the name of the patch property to draw
+        minElev = model.patches.map(p => p[drawnDS]).min()
+        maxElev = model.patches.map(p => p[drawnDS]).max()
+        console.log({ minElev, maxElev })
+    } else {
+        drawnDS = 'ignitionTime'
+        minElev = 0
+        maxElev = model.time + 1
+    }
+    const cmap = ColorMap.Jet
+    view.createPatchPixels(i => {
+        const p = model.patches[i]
+        let val = p[drawnDS]
+        const c = cmap.scaleColor(val, minElev, maxElev)
+        return c.getPixel()
+    })
     view.drawPatches()
     console.timeEnd('draw')
 }
